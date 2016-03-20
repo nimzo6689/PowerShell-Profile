@@ -1,5 +1,5 @@
 $scriptPath = $MyInvocation.MyCommand.Path
-$invokedScripts = Join-Path (Split-Path $scriptPath -Parent) "script"
+$invokedScripts = Join-Path (Split-Path $scriptPath -Parent) "scripts"
 
 gci $invokedScripts -Include *.ps1 -Recurse -Force | % {&($_.FullName)}
 
