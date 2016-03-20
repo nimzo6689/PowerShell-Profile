@@ -1,6 +1,13 @@
 $ErrorActionPreference = "stop"
 
-function global:Get-BasicAuth($User, $Pass) {
+function global:Get-BasicAuth($User, $Pass, [switch]$help) {
+    if ($help) {
+        Write-Host "This Cmdlet generates basic authorization value."
+        Write-Host "Example:"
+        Write-Host "PS C:\>Get-BasicAuth -User username -Pass password"
+        Write-Host "PS C:\>Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+        return $null
+    }
     $StrType = "System.String"
     if ([System.String]::IsNullOrWhiteSpace($User) `
             -or [System.String]::IsNullOrWhiteSpace($Pass)) {
@@ -15,5 +22,5 @@ function global:Get-BasicAuth($User, $Pass) {
     }
     $pair = $User + ":" + $Pass
     $credsOfAscii = [System.Text.Encoding]::ASCII.GetBytes($pair)
-    return [System.Convert]::ToBase64String($credsOfAscii)
+    return "Basic " + [System.Convert]::ToBase64String($credsOfAscii)
 }
