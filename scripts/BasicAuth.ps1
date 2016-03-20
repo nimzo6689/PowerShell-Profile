@@ -1,6 +1,6 @@
 $ErrorActionPreference = "stop"
 
-function global:Get-BasicAuth($User, $Pass, [switch]$help) {
+function global:Get-BasicAuth([string]$User, [string]$Pass, [switch]$help) {
     if ($help) {
         Write-Host "This Cmdlet generates basic authorization value."
         Write-Host "Example:"
