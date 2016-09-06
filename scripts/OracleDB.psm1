@@ -117,9 +117,6 @@ function Update-OracleDB {
         $oraConn.Open()
         $oraCmd.CommandText = $query
         $recordCnt = $oraCmd.ExecuteNonQuery()
-        $oraCmd.Dispose()
-        $oraConn.Close()
-        $oraConn.Dispose()
         return $recordCnt
     } catch [Exception] {
         Write-Output Error[0]
