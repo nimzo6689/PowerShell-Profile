@@ -65,14 +65,13 @@ function Get-OracleDB {
     )
     Write-Verbose $query
     try {
-        $OraConn = New-Object System.Data.OracleClient.OracleConnection($connStr)
-        $oraDa = New-Object System.Data.OracleClient.OracleDataAdapter($query, $OraConn)
+        $oraConn = New-Object System.Data.OracleClient.OracleConnection($connStr)
+        $oraDa = New-Object System.Data.OracleClient.OracleDataAdapter($query, $oraConn)
         $dtSet = New-Object System.Data.DataSet
-        [void]$OraDa.Fill($dtSet)
+        $oraDa.Fill($dtSet)
         return $dtSet.Tables[0].Rows
     } catch [Exception] {
-        Write-Output Error[0]
-        return $null
+        Write-Error -Exception $Global:Error[0].Exception
     } finally {
         $oraConn.Close()
         $oraConn.Dispose()
@@ -119,8 +118,7 @@ function Update-OracleDB {
         $recordCnt = $oraCmd.ExecuteNonQuery()
         return $recordCnt
     } catch [Exception] {
-        Write-Output Error[0]
-        return $null
+        Write-Error -Exception $Global:Error[0].Exception
     } finally {
         $oraCmd.Dispose()
         $oraConn.Close()
