@@ -2,7 +2,7 @@
     Oracle DB へアクセスするためのモジュール
 
     DBへの接続設定用：
-        Set-ConnectionStrring
+        Set-ConnectionString
     SELECT用：
         Get-OracleDB
     UPDATE, DELETE, INSERT用：
@@ -10,12 +10,11 @@
     SQL整形用：
         Format-SQL
     （注意）
-    SQLインジェクション非対応です。
-
-    TODO: パイプライン対応予定。
+    もし、ユーザーから入力された内容をSQLに組み込む場合、
+    SQLインジェクション防止のために当モジュールは使用しないでください。
 
     minimum requiered version : 5.0
-    version : 0.0.2
+    version : 0.0.3
     author : nimzo
 #>
 using namespace System
@@ -39,15 +38,15 @@ Set-Variable -Name ConnectionString -Scope Script
    このコマンドレットを通して保持された接続情報は
    当モジュールのコマンドレットから引数で指定された場合を除き自動で参照されます。
 .EXAMPLE
-   Set-ConnectionStrring -ConnectionString `
+   Set-ConnectionString -ConnectionString `
    "Data Source=localhost:1521/XE;User ID=hoge;Password=hoge;Integrated Security=false;"
 .EXAMPLE
-   C:~nimzo> Set-ConnectionStrring -Step
+   C:~nimzo> Set-ConnectionString -Step
    ホスト名:ポート名/SID ＞: localhost:1521/XE
    ユーザー名 ＞: hoge
    パスワード ＞: ****
 #>
-function Set-ConnectionStrring {
+function Set-ConnectionString {
     [CmdletBinding()]
     [Alias()]
     Param (
@@ -60,15 +59,12 @@ function Set-ConnectionStrring {
     if (!$Step) {
         $Script:ConnectionString = $ConnectionString
     } else {
-        $dataSource = Read-Host "ホスト名:ポート名/SID ＞"
         $userId = Read-Host "ユーザー名 ＞"
         $securedPass = Read-Host -AsSecureString "パスワード ＞"
         $passAsBSTR = [Marshal]::SecureStringToBSTR($securedPass)
         $password = [Marshal]::PtrToStringBSTR($passAsBSTR)
         $connBuilder = New-Object StringBuilder
-        [void]$connBuilder.Append("Data Source=")
-        [void]$connBuilder.Append($dataSource)
-        [void]$connBuilder.Append(";User ID=")
+        [void]$connBuilder.Append("Data Source=localhost:1521/XE;User ID=")
         [void]$connBuilder.Append($userId)
         [void]$connBuilder.Append(";Password=")
         [void]$connBuilder.Append($password)
@@ -124,17 +120,17 @@ function Get-OracleDB {
     [OutputType([System.Data.DataRow])]
     Param (
         [Parameter(Mandatory=$true, Position=0)]
-        [ValidatePattern("^SELECT.+$")]
+        [ValidatePattern("^SELECT.+")]
         [String]
         $Query,
         [String]
         $ConnStr
     )
     if (![String]::IsNullOrEmpty($ConnStr)) {
-        Set-ConnectionStrring -connectionString $ConnStr
+        Set-ConnectionString -connectionString $ConnStr
     } else {
         if ([String]::IsNullOrEmpty($Script:ConnectionString)) {
-            Set-ConnectionStrring -Step
+            Set-ConnectionString
         }
     }
     Write-Verbose $Script:ConnectionString
@@ -180,17 +176,17 @@ function Update-OracleDB {
     [OutputType([int])]
     Param (
         [Parameter(Mandatory=$true, Position=0)]
-        [ValidatePattern("^(UPDATE|DELETE|INSERT).+$")]
+        [ValidatePattern("^(UPDATE|DELETE|INSERT).+")]
         [String]
         $Query,
         [String]
         $ConnStr
     )
     if (![String]::IsNullOrEmpty($ConnStr)) {
-        Set-ConnectionStrring -connectionString $ConnStr
+        Set-ConnectionString -connectionString $ConnStr
     } else {
         if ([String]::IsNullOrEmpty($Script:ConnectionString)) {
-            Set-ConnectionStrring -Step
+            Set-ConnectionString
         }
     }
     Write-Verbose $Script:ConnectionString
@@ -213,7 +209,7 @@ function Update-OracleDB {
 .DESCRIPTION
    精度低め。Beta版です。
 .EXAMPLE
-   Format-SQL "SELECT * FROM employee WHERE empno = 7782"
+   Format-SQL "select * from employee where empno = 7782"
    SELECT *
      FROM employee
     WHERE empno = 7782
@@ -232,6 +228,17 @@ function Format-SQL {
     $Qeury = $Qeury -replace " WHERE ", "`n WHERE "
     $Qeury = $Qeury -replace " AND ", "`n   AND "
     $Qeury = $Qeury -replace " OR ", "`n    OR "
+    $Qeury = $Qeury -replace " LIKE ", " LIKE "
+    $Qeury = $Qeury -replace " IN ", " IN "
+    $Qeury = $Qeury -replace " BETWEEN ", " BETWEEN "
+    $Qeury = $Qeury -replace " ORDER BY ", "`n ORDER BY "
+    $Qeury = $Qeury -replace " ASC ", " ASC "
+    $Qeury = $Qeury -replace " DESC ", " DESC "
+    $Qeury = $Qeury -replace " GROUP BY ", "`n GROUP BY "
+    $Qeury = $Qeury -replace "UPDATE ", "UPDATE "
+    $Qeury = $Qeury -replace " SET ", "`n   SET "
+    $Qeury = $Qeury -replace "INSERT INTO ", "INSERT INTO "
+    $Qeury = $Qeury -replace "DELETE ", "DELETE "
     return $Qeury
 }
 

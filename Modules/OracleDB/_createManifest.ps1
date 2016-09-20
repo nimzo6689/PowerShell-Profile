@@ -9,7 +9,7 @@ $script:functionToExport = @(
         "Set-ConnectionString",
         "Get-OracleDB",
         "Update-OracleDB",
-        "Formart-SQL"
+        "Format-SQL"
 )
 
 $script:variableToExport = ""
