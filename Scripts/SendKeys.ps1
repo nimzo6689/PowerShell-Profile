@@ -4,20 +4,26 @@ Add-Type -AssemblyName System.Windows.Forms
 <#
 .Synopsis
    実行中の任意のプロセスにキーストロークを送る操作をします。
+.DESCRIPTION
+   パラメータのキーストローク、プロセス名がそれぞれ未指定の場合、何も実行されません。
+   キーストロークのみが指定された場合は実行時のフォーカスへキーストロークを送り、
+   プロセス名のみが指定された場合はフォーカスのみが指定されたプロセスに変更します。
 .EXAMPLE
-   Send-Key "test%({Enter})" -ProcessName "LINE"
+   Send-Keys -KeyStroke "test.%~" -ProcessName "LINE"
+
+   このコマンドは既に起動中のLINEアプリに対して"test."と入力し、
+   Altキーを押しながらEnterキーを押下する操作をしています。
 #>
-function Send-Key
+function Send-Keys
 {
     [CmdletBinding()]
     [Alias("sdky")]
-    [OutputType([int])]
     Param
     (
         # キーストローク
         # アプリケーションに送りたいキーストローク内容を指定します。
         # キーストロークの記述方法は下記のWebページを参照。
-        # https://msdn.microsoft.com/ja-jp/library/system.windows.forms.sendkeys(v=vs.110).aspx
+        # https://msdn.microsoft.com/ja-jp/library/cc364423.aspx
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true,
                    Position=0)]
@@ -48,7 +54,10 @@ function Send-Key
         $Process = ps | ? {$_.Name -eq $ProcessName} | select -First 1
         Write-Verbose $Process", KeyStroke = "$KeyStroke", Wait = "$Wait" ms."
         sleep -Milliseconds $Wait
-        [Microsoft.VisualBasic.Interaction]::AppActivate($Process.ID)
+        if ($Process -ne $null)
+        {
+            [Microsoft.VisualBasic.Interaction]::AppActivate($Process.ID)
+        }
         [System.Windows.Forms.SendKeys]::SendWait($KeyStroke)
     }
     End
